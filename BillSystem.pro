@@ -1,4 +1,4 @@
-QT       += core gui
+QT       += core gui xml
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -10,16 +10,23 @@ CONFIG += c++11
 
 SOURCES += \
     billmanagementwidget.cpp \
+    billmodel.cpp \
+    billwidget.cpp \
     clientinfomodel.cpp \
     main.cpp \
     billsystem.cpp
 
 HEADERS += \
     billmanagementwidget.h \
+    billmodel.h \
     billsystem.h \
+    billwidget.h \
     clientinfomodel.h
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+RESOURCES += \
+    image.qrc

@@ -1,215 +1,12 @@
 #include "billmanagementwidget.h"
+#include "billmodel.h"
+#include "billwidget.h"
 #include <QItemSelectionModel>
-
-BillManagementModel::BillManagementModel(QObject *parent, BillType type)
-    : QAbstractTableModel(parent), billType(type)
-{
-}
-
-QVariant BillManagementModel::headerData(int section, Qt::Orientation orientation, int role) const
-{
-    if (orientation == Qt::Horizontal) {
-        if (role == Qt::DisplayRole) {
-            if (billType == BILL_TYPE_PROCESS) {
-                switch (section) {
-                case 0: return QString("Date");
-                case 1: return QString("Name");
-                case 2: return QString("Model");
-                case 3: return QString("Item");
-                case 4: return QString("Method");
-                case 5: return QString("Number");
-                case 6: return QString("Price");
-                case 7: return QString("Total");
-                }
-            }
-            else if (billType == BILL_TYPE_OUTSOLE) {
-                switch (section) {
-                case 0: return QString("Date");
-                case 1: return QString("Name");
-                case 2: return QString("Model");
-                case 3: return QString("Color");
-                case 4: return QString("Number");
-                case 5: return QString("Price");
-                case 6: return QString("Total");
-                }
-            }
-        }
-        else if (role == Qt::TextAlignmentRole) {
-            return Qt::AlignHCenter;
-        }
-    }
-
-    return QVariant();
-}
-
-//bool BillManagementModel::setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role)
-//{
-//    if (value != headerData(section, orientation, role)) {
-//        // FIXME: Implement me!
-//        emit headerDataChanged(orientation, section, section);
-//        return true;
-//    }
-//    return false;
-//}
-
-
-int BillManagementModel::rowCount(const QModelIndex &parent) const
-{
-    if (parent.isValid())
-        return 0;
-
-    if (billType == BILL_TYPE_PROCESS) {
-        return billProcessData.count();
-    }
-    else if (billType == BILL_TYPE_OUTSOLE) {
-        return billOutsoleData.count();
-    }
-
-    return 0;
-}
-
-int BillManagementModel::columnCount(const QModelIndex &parent) const
-{
-    if (parent.isValid())
-        return 0;
-
-    if (billType == BILL_TYPE_PROCESS) {
-        return 8;
-    }
-    else if (billType == BILL_TYPE_OUTSOLE) {
-        return 7;
-    }
-
-    return 0;
-}
-
-QVariant BillManagementModel::data(const QModelIndex &index, int role) const
-{
-    if (!index.isValid())
-        return QVariant();
-
-    if (role == Qt::DisplayRole || role == Qt::EditRole) {
-        const int row = index.row();
-        const int column = index.column();
-        if (billType == BILL_TYPE_PROCESS) {
-            switch (column) {
-            case 0: return billProcessData[row].date;
-            case 1: return billProcessData[row].name;
-            case 2: return billProcessData[row].model;
-            case 3: return billProcessData[row].item;
-            case 4: return billProcessData[row].method;
-            case 5: return billProcessData[row].number;
-            case 6: return billProcessData[row].price;
-            case 7: return billProcessData[row].total;
-            }
-        }
-        else if (billType == BILL_TYPE_OUTSOLE) {
-            switch (column) {
-            case 0: return billOutsoleData[row].date;
-            case 1: return billOutsoleData[row].name;
-            case 2: return billOutsoleData[row].model;
-            case 3: return billOutsoleData[row].color;
-            case 4: return billOutsoleData[row].number;
-            case 5: return billOutsoleData[row].price;
-            case 6: return billOutsoleData[row].total;
-            }
-        }
-    }
-
-    return QVariant();
-}
-
-bool BillManagementModel::setData(const QModelIndex &index, const QVariant &value, int role)
-{
-    if (data(index, role) != value) {
-        const int row = index.row();
-        const int column = index.column();
-        if (billType == BILL_TYPE_PROCESS) {
-            switch (column) {
-            case 0: billProcessData[row].date = value.toString();   break;
-            case 1: billProcessData[row].name = value.toString();   break;
-            case 2: billProcessData[row].model = value.toString();  break;
-            case 3: billProcessData[row].item = value.toString();   break;
-            case 4: billProcessData[row].method = value.toString(); break;
-            case 5: billProcessData[row].number = value.toUInt();   break;
-            case 6: billProcessData[row].price = value.toFloat();   break;
-            case 7: billProcessData[row].total = value.toUInt();    break;
-            }
-        }
-        else if (billType == BILL_TYPE_OUTSOLE) {
-            switch (column) {
-            case 0: billOutsoleData[row].date = value.toString();   break;
-            case 1: billOutsoleData[row].name = value.toString();   break;
-            case 2: billOutsoleData[row].model = value.toString();  break;
-            case 3: billOutsoleData[row].color = value.toString();  break;
-            case 4: billOutsoleData[row].number = value.toUInt();   break;
-            case 5: billOutsoleData[row].price = value.toFloat();   break;
-            case 6: billOutsoleData[row].total = value.toUInt();    break;
-            }
-        }
-        emit dataChanged(index, index, QVector<int>() << role);
-        return true;
-    }
-    return false;
-}
-
-Qt::ItemFlags BillManagementModel::flags(const QModelIndex &index) const
-{
-    if (!index.isValid())
-        return Qt::NoItemFlags;
-
-    return Qt::ItemIsEditable | Qt::ItemIsEnabled;
-}
-
-bool BillManagementModel::insertRows(int row, int count, const QModelIndex &parent)
-{
-    beginInsertRows(parent, row, row + count - 1);
-    if (billType == BILL_TYPE_PROCESS) {
-        for (int i = row; i < row+count; i++) {
-            billProcessData.insert(i, processDefaultData);
-        }
-    }
-    else if (billType == BILL_TYPE_OUTSOLE) {
-        for (int i = row; i < row+count; i++) {
-            billOutsoleData.insert(i, outsoleDefaultData);
-        }
-    }
-    endInsertRows();
-
-    return true;
-}
-
-//bool BillManagementModel::insertColumns(int column, int count, const QModelIndex &parent)
-//{
-//    beginInsertColumns(parent, column, column + count - 1);
-//    // FIXME: Implement me!
-//    endInsertColumns();
-//}
-
-bool BillManagementModel::removeRows(int row, int count, const QModelIndex &parent)
-{
-    beginRemoveRows(parent, row, row + count - 1);
-    if (billType == BILL_TYPE_PROCESS) {
-        for (int i = row+count-1; i > row; i--) {
-            billProcessData.removeAt(i);
-        }
-    }
-    else if (billType == BILL_TYPE_OUTSOLE) {
-        for (int i = row+count-1; i > row; i--) {
-            billOutsoleData.removeAt(i);
-        }
-    }
-    endRemoveRows();
-
-    return true;
-}
-
-//bool BillManagementModel::removeColumns(int column, int count, const QModelIndex &parent)
-//{
-//    beginRemoveColumns(parent, column, column + count - 1);
-//    // FIXME: Implement me!
-//    endRemoveColumns();
-//}
+#include <QDebug>
+#include <QDir>
+#include <QFileInfo>
+#include <QFileInfoList>
+#include <QIcon>
 
 BillManagementWidget::BillManagementWidget(QWidget *parent)
     : QWidget(parent)
@@ -234,22 +31,142 @@ void BillManagementWidget::initUI()
     mainLayout->addWidget(exportBillBtn);
 
     connect(createBillBtn, &QPushButton::clicked, this, &BillManagementWidget::createBillBtnClicked);
+    connect(checkBillBtn, &QPushButton::clicked, this, &BillManagementWidget::checkBillBtnClicked);
+}
+
+bool BillManagementWidget::createXml(QString fileName, QString date)
+{
+    QFile file(fileName);
+
+    if (file.exists())
+        return true;
+
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate))
+        return false;
+
+    QDomDocument doc;
+    QDomProcessingInstruction instruction;
+    QDomElement root;
+    QDomAttr rootAttr;
+    QTextStream out(&file);
+    instruction = doc.createProcessingInstruction("xml", "version=\"1.0\" encoding=\"UTF-8\"");
+    doc.appendChild(instruction);
+    root = doc.createElement(QString("Bill"));
+    rootAttr = doc.createAttribute(QString("month"));
+    rootAttr.setValue(date);
+    root.setAttributeNode(rootAttr);
+    doc.appendChild(root);
+    doc.save(out, QDomNode::EncodingFromDocument);
+    file.close();
+
+    return true;
+}
+
+
+void BillManagementWidget::showFileList(QTreeWidget *treeWidget, QFileInfoList infoList)
+{
+    QFileInfo info;
+    QDir dir;
+    QFileInfoList list;
+
+    for (int i = 0; i < infoList.size(); i++) {
+        QTreeWidgetItem *item = new QTreeWidgetItem();
+        info = infoList.at(i);
+        if (info.fileName() == "." || info.fileName() == "..") {
+            continue;
+        }
+
+        if (info.isDir()) {
+            item->setText(0, info.fileName());
+            item->setIcon(0, QIcon("://image/icon/dir.png"));
+            treeWidget->addTopLevelItem(item);
+            dir.setPath(info.filePath());
+            dir.setFilter(QDir::Files | QDir::Dirs);
+            dir.setSorting(QDir::DirsFirst);
+            list = dir.entryInfoList();
+            showFileList(item, list);
+        }
+        else if (info.isFile()) {
+            item->setText(0, info.fileName());
+            item->setIcon(0, QIcon("://image/icon/XML.png"));
+            treeWidget->addTopLevelItem(item);
+        }
+    }
+}
+
+void BillManagementWidget::showFileList(QTreeWidgetItem *item, QFileInfoList infoList)
+{
+    QFileInfo info;
+    QDir dir;
+    QFileInfoList list;
+
+    for (int i = 0; i < infoList.size(); i++) {
+        QTreeWidgetItem *childItem = new QTreeWidgetItem();
+        info = infoList.at(i);
+        if (info.fileName() == "." || info.fileName() == "..") {
+            continue;
+        }
+
+        if (info.isDir()) {
+            childItem->setText(0, info.fileName());
+            childItem->setIcon(0, QIcon("://image/icon/dir.png"));
+            item->addChild(childItem);
+            dir.setPath(info.filePath());
+            dir.setFilter(QDir::Files | QDir::Dirs);
+            dir.setSorting(QDir::DirsFirst);
+            list = dir.entryInfoList();
+            showFileList(childItem, list);
+        }
+        else if (info.isFile()) {
+            childItem->setText(0, info.fileName());
+            childItem->setIcon(0, QIcon("://image/icon/XML.png"));
+            item->addChild(childItem);
+        }
+    }
 }
 
 void BillManagementWidget::createBillBtnClicked(void)
 {
     createBillLabel = new QLabel("Select Type");
+    dateSelectLabel = new QLabel("Select Date");
+    yearSelectLabel = new QLabel("year");\
+    yearSelectLabel->setAlignment(Qt::AlignCenter);
+    monthSelectLabel = new QLabel("month");
+    monthSelectLabel->setAlignment(Qt::AlignCenter);
+    defaultRowsLabel = new QLabel("Default Rows");
+
     createBillBox = new QComboBox();
     createBillBox->addItem("Process");
     createBillBox->addItem("Outsole");
+
+    yearSelectBox = new QComboBox();
+    for (int i = 2010; i <= 2030; i++) {
+        yearSelectBox->addItem(QString("%1").arg(i));
+    }
+    yearSelectBox->setCurrentText(QString("2021"));
+
+    monthSelectBox = new QComboBox();
+    for (int i = 1; i <= 12; i++) {
+        monthSelectBox->addItem(QString("%1").arg(i));
+    }
+
+    defaultRowsEdit = new QLineEdit(QString("1"));
+
     createBillConfirmBtn = new QPushButton("Confirm");
     createBillCancelBtn = new QPushButton("Cancel");
 
     selectBillTypeLayout = new QGridLayout();
-    selectBillTypeLayout->addWidget(createBillLabel, 0, 0, 1, 2);
-    selectBillTypeLayout->addWidget(createBillBox, 0, 2, 1, 2);
-    selectBillTypeLayout->addWidget(createBillConfirmBtn, 1, 2, 1, 1);
-    selectBillTypeLayout->addWidget(createBillCancelBtn, 1, 3, 1, 1);
+    selectBillTypeLayout->addWidget(createBillLabel, 0, 0, 1, 1);
+    selectBillTypeLayout->addWidget(createBillBox, 0, 1, 1, 2);
+    selectBillTypeLayout->addWidget(dateSelectLabel, 1, 0, 1, 1);
+    selectBillTypeLayout->addWidget(yearSelectLabel, 1, 1, 1, 1);
+    selectBillTypeLayout->addWidget(yearSelectBox, 1, 2, 1, 1);
+    selectBillTypeLayout->addWidget(monthSelectLabel, 1, 3, 1, 1);
+    selectBillTypeLayout->addWidget(monthSelectBox, 1, 4, 1, 1);
+    selectBillTypeLayout->addWidget(defaultRowsLabel, 2, 0, 1, 1);
+    selectBillTypeLayout->addWidget(defaultRowsEdit, 2, 1, 1, 2);
+    selectBillTypeLayout->addWidget(createBillConfirmBtn, 3, 3, 1, 1);
+    selectBillTypeLayout->addWidget(createBillCancelBtn, 3, 4, 1, 1);
 
     selectBillTypeWindow = new QWidget();
     selectBillTypeWindow->setAttribute(Qt::WA_DeleteOnClose);
@@ -261,33 +178,55 @@ void BillManagementWidget::createBillBtnClicked(void)
 
 void BillManagementWidget::createBillConfirmBtnClicked(void)
 {
-    newBillView = new QTableView();
+    QDir dir;
+    QString billDir = QString("./data/%1/%2/").arg(yearSelectBox->currentText()).arg(monthSelectBox->currentText());
+    if (!dir.exists(billDir)) {
+        dir.mkpath(billDir);
+        qDebug() << "create bill month directory";
+    }
+
+    QString date = QString("%1-%2").arg(yearSelectBox->currentText()).arg(monthSelectBox->currentText(), 2, '0');
+    QString fileName = QString("%1-%2%3.xml").arg(createBillBox->currentText()).arg(yearSelectBox->currentText()).
+            arg(monthSelectBox->currentText(), 2, '0');
+    currentXmlPath = billDir + fileName;
+    QFile file(currentXmlPath);
+
     if (createBillBox->currentText().compare("Process") == 0) {
-        newBillModel = new BillManagementModel(nullptr, BILL_TYPE_PROCESS);
+        model = new BillProcessModel();
+        billWidget = new BillWidget(nullptr, model);
+        if (file.exists()) {
+            qDebug() << "read data";
+            billWidget->readData(currentXmlPath);
+        }
+        else {
+            if (!createXml(currentXmlPath, date)) {
+                qDebug() << "create xml failed.";
+            }
+            model->insertRows(0, defaultRowsEdit->text().toInt());
+        }
+        billWidget->setXmlPath(currentXmlPath);
+        billWidget->resize(1000, 400);
+        billWidget->show();
     }
     else {
-        newBillModel = new BillManagementModel(nullptr, BILL_TYPE_OUTSOLE);
+        model = new BillOutsoleModel();
+        billWidget = new BillWidget(nullptr, model);
+        if (file.exists()) {
+            qDebug() << "read data";
+            billWidget->readData(currentXmlPath);
+        }
+        else {
+            if (!createXml(currentXmlPath, date)) {
+                qDebug() << "create xml failed.";
+            }
+            model->insertRows(0, defaultRowsEdit->text().toInt());
+        }
+        billWidget->setXmlPath(currentXmlPath);
+        billWidget->resize(1000, 400);
+        billWidget->show();
     }
 
-    newBillView->setModel(newBillModel);
-
-    addRowBtn = new QPushButton("Add");
-    deleteRowBtn = new QPushButton("Delete");
-    upperLayout = new QHBoxLayout();
-    upperLayout->addWidget(addRowBtn);
-    upperLayout->addWidget(deleteRowBtn);
-    bottomLayout = new QVBoxLayout();
-    bottomLayout->addWidget(newBillView);
-    newBillLayout = new QVBoxLayout();
-    newBillLayout->addLayout(upperLayout);
-    newBillLayout->addLayout(bottomLayout);
-    newBillWindow = new QWidget();
-    newBillWindow->setLayout(newBillLayout);
-    newBillWindow->show();
     selectBillTypeWindow->close();
-
-    connect(addRowBtn, &QPushButton::clicked, this, &BillManagementWidget::newBillAddRowBtnClicked);
-    connect(deleteRowBtn, &QPushButton::clicked, this, &BillManagementWidget::newBillDeleteRowBtnClicked);
 }
 
 void BillManagementWidget::createBillCancelBtnClicked(void)
@@ -295,18 +234,51 @@ void BillManagementWidget::createBillCancelBtnClicked(void)
 
 }
 
-void BillManagementWidget::newBillAddRowBtnClicked(void)
+void BillManagementWidget::checkBillBtnClicked(void)
 {
-    QItemSelectionModel *selectionModel = newBillView->selectionModel();
-    QModelIndex index = selectionModel->currentIndex();
-    qDebug("add row = %d, column = %d", index.row(), index.column());
-    newBillModel->insertRow(index.row()+1);
+    checkBillWindow = new QTreeWidget();
+
+    QDir rootDir("./data");
+    if (!rootDir.exists()) {
+        delete  checkBillWindow;
+        return ;
+    }
+
+    rootDir.setFilter(QDir::Dirs | QDir::Files);
+    rootDir.setSorting(QDir::DirsFirst);
+    QFileInfoList infoList = rootDir.entryInfoList();
+    showFileList(checkBillWindow, infoList);
+
+    connect(checkBillWindow, &QTreeWidget::itemDoubleClicked, this, &BillManagementWidget::checkBillItemDoubleClicked);
+
+    checkBillWindow->expandAll();
+    checkBillWindow->setExpandsOnDoubleClick(false);
+    checkBillWindow->resize(400, 400);
+    checkBillWindow->show();
 }
 
-void BillManagementWidget::newBillDeleteRowBtnClicked(void)
+void BillManagementWidget::checkBillItemDoubleClicked(QTreeWidgetItem *item, int column)
 {
-    QItemSelectionModel *selectionModel = newBillView->selectionModel();
-    QModelIndex index = selectionModel->currentIndex();
-    qDebug("delete row = %d, column = %d", index.row(), index.column());
-    newBillModel->removeRow(index.row());
+    QString filePath = item->text(column);
+    QString xmlFile;
+
+    if (item->text(column).contains("Process")) {
+        model = new BillProcessModel();
+    }
+    else if (item->text(column).contains("Outsole")) {
+        model = new BillOutsoleModel();
+    }
+
+    QTreeWidgetItem *itemParent = item->parent();
+    while (itemParent != nullptr) {
+        filePath = itemParent->text(column) + '/' + filePath;
+        itemParent = itemParent->parent();
+    }
+    filePath = "./data/" + filePath;
+    qDebug() << "file path: " + filePath;
+
+    billWidget = new BillWidget(nullptr, model);
+    billWidget->readData(filePath);
+    billWidget->resize(1000, 400);
+    billWidget->show();
 }

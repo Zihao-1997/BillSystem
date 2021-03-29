@@ -1,6 +1,8 @@
 #ifndef BILLMANAGEMENTMODEL_H
 #define BILLMANAGEMENTMODEL_H
 
+#include "billmodel.h"
+#include "billwidget.h"
 #include <QAbstractTableModel>
 #include <QWidget>
 #include <QPushButton>
@@ -10,71 +12,13 @@
 #include <QGridLayout>
 #include <QList>
 #include <QTableView>
-
-enum BillType {
-    BILL_TYPE_PROCESS = 0x01,
-    BILL_TYPE_OUTSOLE
-};
-
-typedef struct BillProcessFormat {
-    QString date;
-    QString name;
-    QString model;
-    QString item;
-    QString method;
-    uint32_t number;
-    float price;
-    uint32_t total;
-} BillProcessFormat;
-
-typedef struct BillOutsoleFormat {
-    QString date;
-    QString name;
-    QString model;
-    QString color;
-    uint32_t number;
-    float price;
-    uint32_t total;
-} BillOutsoleFormat;
-
-class BillManagementModel : public QAbstractTableModel
-{
-    Q_OBJECT
-
-public:
-    explicit BillManagementModel(QObject *parent = nullptr, BillType type = BILL_TYPE_OUTSOLE);
-
-    // Header:
-    QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
-
-//    bool setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role = Qt::EditRole) override;
-
-    // Basic functionality:
-    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
-    int columnCount(const QModelIndex &parent = QModelIndex()) const override;
-
-    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
-
-    // Editable:
-    bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
-
-    Qt::ItemFlags flags(const QModelIndex& index) const override;
-
-    // Add data:
-    bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
-//    bool insertColumns(int column, int count, const QModelIndex &parent = QModelIndex()) override;
-
-    // Remove data:
-    bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
-//    bool removeColumns(int column, int count, const QModelIndex &parent = QModelIndex()) override;
-
-private:
-    BillType billType;
-    QList<BillProcessFormat> billProcessData;
-    QList<BillOutsoleFormat> billOutsoleData;
-    BillProcessFormat processDefaultData = { };
-    BillOutsoleFormat outsoleDefaultData = { };
-};
+#include <QDomDocument>
+#include <QTextStream>
+#include <QFile>
+#include <QLineEdit>
+#include <QTreeWidget>
+#include <QTreeWidgetItem>
+#include <QFileInfoList>
 
 class BillManagementWidget : public QWidget
 {
@@ -85,6 +29,10 @@ public:
     ~BillManagementWidget();
 
     void initUI(void);
+    bool createXml(QString fileName, QString date);
+    void showFileList(QTreeWidget *treeWidget, QFileInfoList infoList);
+    void showFileList(QTreeWidgetItem *item, QFileInfoList infoList);
+    void createEditBillWindow(void);
 
 private:
     /* main window */
@@ -95,28 +43,37 @@ private:
 
     /* create new bill window */
     QLabel *createBillLabel;
+    QLabel *dateSelectLabel;
+    QLabel *yearSelectLabel;
+    QLabel *monthSelectLabel;
+    QLabel *defaultRowsLabel;
     QComboBox *createBillBox;
+    QComboBox *yearSelectBox;
+    QComboBox *monthSelectBox;
     QPushButton *createBillConfirmBtn;
     QPushButton *createBillCancelBtn;
+    QLineEdit *defaultRowsEdit;
     QGridLayout *selectBillTypeLayout;
     QWidget *selectBillTypeWindow;
 
-    /* new bill window */
-    QPushButton *addRowBtn;
-    QPushButton *deleteRowBtn;
-    QHBoxLayout *upperLayout;
-    QVBoxLayout *bottomLayout;
-    QVBoxLayout *newBillLayout;
-    QWidget *newBillWindow;
-    QTableView *newBillView;
-    BillManagementModel *newBillModel;
+    /* check bill window */
+    QTreeWidget *checkBillWindow;
+
+    QDomDocument xmlDoc;
 
 private slots:
     void createBillBtnClicked(void);
     void createBillConfirmBtnClicked(void);
     void createBillCancelBtnClicked(void);
-    void newBillAddRowBtnClicked(void);
-    void newBillDeleteRowBtnClicked(void);
+    void checkBillBtnClicked(void);
+    void checkBillItemDoubleClicked(QTreeWidgetItem *item, int column);
+
+private:
+    QString currentXmlPath;
+    BillProcessModel *processModel;
+    BillOutsoleModel *outsoleModel;
+    QAbstractTableModel *model;
+    BillWidget *billWidget;
 };
 
 #endif // BILLMANAGEMENTMODEL_H
